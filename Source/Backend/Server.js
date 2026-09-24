@@ -46,32 +46,68 @@ let sectionFields = {
     Homework: ['Class', 'Due']
 }
 
+let ErrorCodes = {
+    SECTION_NOT_FOUND: 'SECTION_NOT_FOUND',
+    KEY_NOT_FOUND: 'SECTION_NOT_FOUND',
+    SECTION_KEY_NOT_FOUND: 'SECTION_KEY_NOT_FOUND'
+};
 
-function getSection(request, response, SectionKey) {
-    const Section = Sections[SectionKey];
-    if (Section === undefined) return response.status(404).send(`There is no ${SectionKey} in the dashboard`);
-   return Section;
+
+function throwError(Error, Message, Code) {
+    return {
+        Error: Error,
+        Message: Message,
+        Code: Code
+    };
+} 
+
+
+function errorHandler(response, object) {
+    switch (object.Code) {
+        
+        case ErrorCodes.SECTION_NOT_FOUND:
+        case ErrorCodes.SECTION_KEY_NOT_FOUND:
+            return response.status(404).send(object.Message);
+        
+        case ErrorCodes.KEY_NOT_FOUND:
+            return response.status(400).send(object.Message);
+
+        default:
+            return response.status(400).send(`Something went wrong`);
+
+    }
 }
-
 
 // ------------------------------ GET ------------------------------
 
 
-function getFiltered(request, response, Section, SectionKey) {
+
+function getSection(SectionKey) {
+    const Section = Sections[SectionKey];
+    if (Section === undefined) return throwError(true, `There is no ${SectionKey} in the dashboard`, ErrorCodes.SECTION_NOT_FOUND);
+   return Section;
+}
+
+
+
+function getFiltered(request, Section, SectionKey) {
+
+    //TODO: This is unreliable, use express
     const parameter = request.params.value;
     const parts = parameter.split("=");
     let key = parts[0];
     let value = parts[1];
     
- 
-    if (Section.length === 0) return response.status(404).send(`There is no ${SectionKey}`);
+    
+    if (Section.length === 0) return throwError(true, `There is no ${SectionKey}`, ErrorCodes.SECTION_NOT_FOUND);
 
     if (!Object.keys(Section[0]).includes(key)) {
-        return response.status(400).send(`There is no ${key} in ${SectionKey}`);
+        return throwError(true, `There is no ${key} in ${SectionKey}`, ErrorCodes.KEY_NOT_FOUND);
     } 
 
     const filtered = Section.filter(fieldElement => fieldElement[key] === value);
-    return filtered.length > 0 ? filtered : response.status(404).send(`This ${SectionKey} doesn't exist`);
+        return filtered.length > 0 ? filtered : throwError(true, `The ${SectionKey} doesn't exist`, ErrorCodes.SECTION_KEY_NOT_FOUND);
+
 }
 
 
@@ -84,7 +120,8 @@ app.get('/', (request, response) => {
 
 app.get('/:Section', (request, response) => {
     const SectionKey = request.params.Section;
-    const Section = getSection(request, response, SectionKey);
+    const Section = getSection(SectionKey);
+    if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
     return response.status(200).json(Section);
 
 });
@@ -92,9 +129,11 @@ app.get('/:Section', (request, response) => {
 
 app.get('/:Section/:value', (request, response) => {
     const SectionKey = request.params.Section;
-    const Section = getSection(request, response, SectionKey);
+    const Section = getSection(SectionKey);
+    if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
 
-    const filteredSubSection = getFiltered(request, response, Section, SectionKey);
+    const filteredSubSection = getFiltered(request, Section, SectionKey);
+    if (filteredSubSection.Error === true ) return errorHandler(response, filteredSubSection);
 
     return response.status(200).json(filteredSubSection);
 });
@@ -105,10 +144,11 @@ app.get('/:Section/:value', (request, response) => {
 
 app.post('/:Section', (request, response) => {
     const SectionKey = request.params.Section;
-    const Section = getSection(request, response, SectionKey);
+    const Section = getSection(SectionKey);
+    if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
+
     
     const clientData = request.body;
-    
     const newSubSection = {};
 
     for(const [key, value] of Object.entries(clientData)) {
@@ -131,13 +171,18 @@ app.post('/:Section', (request, response) => {
 //------------------------------ DELETE -------------------------------
 app.delete('/:Section/:value', (request, response) => {
     const SectionKey = request.params.Section;
-    const Section = getSection(request, response, SectionKey);
+    const Section = getSection(SectionKey);
+    if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
 
-    const filteredSubSection = getFiltered(request, response, Section, SectionKey)[0];
+
+    let filteredSubSection = getFiltered(request, Section, SectionKey);
+    if (filteredSubSection.Error === true ) return errorHandler(response, filteredSubSection);
+    if (Array.isArray(filteredSubSection)) filteredSubSection = filteredSubSection[0];
+
     const indexOfFilteredSection = Section.indexOf(filteredSubSection);
     
     Section.splice(indexOfFilteredSection, 1);
-    return response.status(204).send(`The ${SectionKey} has been deleted`);
+    return response.status(200).send(`The ${SectionKey} has been deleted`);
     
 });
 
@@ -146,10 +191,14 @@ app.delete('/:Section/:value', (request, response) => {
 
 app.put('/:Section/:value', (request, response) => {
     const SectionKey = request.params.Section;
-    const Section = getSection(request, response, SectionKey);
-    const clientData = request.body;
+    const Section = getSection(SectionKey);
+    if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
 
-    const filteredSubSection = getFiltered(request, response, Section, SectionKey)[0]; //Because it returns an array with array.filter();
+    const clientData = request.body;
+    
+    const filteredSubSection = getFiltered(request, Section, SectionKey); //Because it returns an array with array.filter();
+    if (filteredSubSection.Error === true ) return errorHandler(response, filteredSubSection);
+    if (Array.isArray(filteredSubSection)) filteredSubSection = filteredSubSection[0];
 
     const newSubSection = {};
 
