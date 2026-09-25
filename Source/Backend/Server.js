@@ -46,6 +46,8 @@ let sectionFields = {
     Homework: ['Class', 'Due']
 }
 
+
+//TODO: Use Javscript/Node.js/Express Error handler if it exists
 let ErrorCodes = {
     SECTION_NOT_FOUND: 'SECTION_NOT_FOUND',
     KEY_NOT_FOUND: 'SECTION_NOT_FOUND',
@@ -92,22 +94,23 @@ function getSection(SectionKey) {
 
 function getFiltered(request, Section, SectionKey) {
 
-    //TODO: This is unreliable, use express
-    const parameter = request.params.value;
-    const parts = parameter.split("=");
-    let key = parts[0];
-    let value = parts[1];
-    
-    
-    if (Section.length === 0) return throwError(true, `There is no ${SectionKey}`, ErrorCodes.SECTION_NOT_FOUND);
+    //FIXME: THIS IS NOT WORKING!!!
+
+    //request.query would return whatever is inputed into the URL, so /Classes/ID=1 We need to return the key as well as the value if possible and wanted
+    let query = Object.assign({}, request.query);
+    let key = Object.entries(query)[0];
+    let value = Object.entries(query)[1];
+
+    console.log(key, value);
 
     if (!Object.keys(Section[0]).includes(key)) {
         return throwError(true, `There is no ${key} in ${SectionKey}`, ErrorCodes.KEY_NOT_FOUND);
-    } 
+    }
 
     const filtered = Section.filter(fieldElement => fieldElement[key] === value);
-        return filtered.length > 0 ? filtered : throwError(true, `The ${SectionKey} doesn't exist`, ErrorCodes.SECTION_KEY_NOT_FOUND);
-
+    console.log(filtered);
+    return filtered.length > 0 ? filtered : throwError(true, `The ${SectionKey} doesn't exist`, ErrorCodes.SECTION_KEY_NOT_FOUND);
+    
 }
 
 
@@ -118,20 +121,20 @@ app.get('/', (request, response) => {
 
 
 
+// app.get('/:Section', (request, response) => {
+//     const SectionKey = request.params.Section;
+//     const Section = getSection(SectionKey);
+//     if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
+//     return response.status(200).json(Section);
+
+// });
+
+
 app.get('/:Section', (request, response) => {
     const SectionKey = request.params.Section;
     const Section = getSection(SectionKey);
     if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
-    return response.status(200).json(Section);
-
-});
-
-
-app.get('/:Section/:value', (request, response) => {
-    const SectionKey = request.params.Section;
-    const Section = getSection(SectionKey);
-    if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
-
+    
     const filteredSubSection = getFiltered(request, Section, SectionKey);
     if (filteredSubSection.Error === true ) return errorHandler(response, filteredSubSection);
 
