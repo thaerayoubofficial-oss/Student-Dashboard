@@ -51,7 +51,8 @@ let sectionFields = {
 let ErrorCodes = {
     SECTION_NOT_FOUND: 'SECTION_NOT_FOUND',
     KEY_NOT_FOUND: 'SECTION_NOT_FOUND',
-    SECTION_KEY_NOT_FOUND: 'SECTION_KEY_NOT_FOUND'
+    SECTION_KEY_NOT_FOUND: 'SECTION_KEY_NOT_FOUND',
+    PARAMETERS_NOT_FOUND: 'PARAMETERS_NOT_FOUND'
 };
 
 
@@ -94,22 +95,24 @@ function getSection(SectionKey) {
 
 function getFiltered(request, Section, SectionKey) {
 
-    //FIXME: THIS IS NOT WORKING!!!
+    //FIXME: Fixed bugs, multiple filters is the only implementation left to do.
 
-    //request.query would return whatever is inputed into the URL, so /Classes/ID=1 We need to return the key as well as the value if possible and wanted
     let query = Object.assign({}, request.query);
-    let key = Object.entries(query)[0];
-    let value = Object.entries(query)[1];
+   
+    if (Object.keys(query).length === 0) return throwError(false, `There were no parameters`, ErrorCodes.PARAMETERS_NOT_FOUND);
+   
 
-    console.log(key, value);
+    let params = Object.entries(query);
+    
+    let [key, value] = params[0];
 
     if (!Object.keys(Section[0]).includes(key)) {
         return throwError(true, `There is no ${key} in ${SectionKey}`, ErrorCodes.KEY_NOT_FOUND);
     }
 
-    const filtered = Section.filter(fieldElement => fieldElement[key] === value);
-    console.log(filtered);
+    const filtered = Section.filter(fieldElement => fieldElement[key].replace(/\s+/g, '') === value.replace(/\s+/g, ''));
     return filtered.length > 0 ? filtered : throwError(true, `The ${SectionKey} doesn't exist`, ErrorCodes.SECTION_KEY_NOT_FOUND);
+
     
 }
 
@@ -121,26 +124,20 @@ app.get('/', (request, response) => {
 
 
 
-// app.get('/:Section', (request, response) => {
-//     const SectionKey = request.params.Section;
-//     const Section = getSection(SectionKey);
-//     if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
-//     return response.status(200).json(Section);
-
-// });
-
-
 app.get('/:Section', (request, response) => {
     const SectionKey = request.params.Section;
     const Section = getSection(SectionKey);
     if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
-    
+
     const filteredSubSection = getFiltered(request, Section, SectionKey);
+    if (!filteredSubSection.Error && filteredSubSection.Code == ErrorCodes.PARAMETERS_NOT_FOUND) {
+        return response.status(200).json(Section);
+    }
+    
     if (filteredSubSection.Error === true ) return errorHandler(response, filteredSubSection);
 
     return response.status(200).json(filteredSubSection);
 });
-
 
 
 // ------------------------------ POST -------------------------------
@@ -172,7 +169,7 @@ app.post('/:Section', (request, response) => {
 
 
 //------------------------------ DELETE -------------------------------
-app.delete('/:Section/:value', (request, response) => {
+app.delete('/:Section', (request, response) => {
     const SectionKey = request.params.Section;
     const Section = getSection(SectionKey);
     if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
@@ -192,14 +189,14 @@ app.delete('/:Section/:value', (request, response) => {
 
 //------------------------------ PUT ------------------------------
 
-app.put('/:Section/:value', (request, response) => {
+app.put('/:Section', (request, response) => {
     const SectionKey = request.params.Section;
     const Section = getSection(SectionKey);
     if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
 
     const clientData = request.body;
     
-    const filteredSubSection = getFiltered(request, Section, SectionKey); //Because it returns an array with array.filter();
+    let filteredSubSection = getFiltered(request, Section, SectionKey); //Because it returns an array with array.filter();
     if (filteredSubSection.Error === true ) return errorHandler(response, filteredSubSection);
     if (Array.isArray(filteredSubSection)) filteredSubSection = filteredSubSection[0];
 
@@ -211,17 +208,17 @@ app.put('/:Section/:value', (request, response) => {
         newSubSection[key] = value;
     }
 
-    //TODO: instead of "Not Specified" we use the old data.
-
     for (let sectionField of sectionFields[SectionKey]) {
         if(newSubSection[sectionField] === undefined) {
-            newSubSection[sectionField] = "Not Specified";
+            newSubSection[sectionField] = filteredSubSection[sectionField];
         }        
     }
 
     Section.splice(Section.indexOf(filteredSubSection), 1, newSubSection);
     return response.status(200).send(`The ${SectionKey} has been successfully replaced`);
 });
+
+
 
 app.listen(3000, () => {
     console.log("http://localhost:3000");

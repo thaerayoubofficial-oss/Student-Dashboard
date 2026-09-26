@@ -6,7 +6,7 @@ const { response } = require('express');
 // }).then((response) => {console.log(response.data);});
 
 
-axios.put('http://localhost:3000/Classes/Class=Calculus I', {
+axios.put('http://localhost:3000/Classes?Class=Calculus I', {
     Class: "Physics III"
 }).then(
     (response) => {
