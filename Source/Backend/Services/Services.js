@@ -1,5 +1,4 @@
 const data = require('../Data/Classes_Data');
-const controller = require('../Controllers/Controller');
 
 function throwError(Error, Message, Code) {
     return {

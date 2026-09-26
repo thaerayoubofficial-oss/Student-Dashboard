@@ -77,7 +77,7 @@ function DELETESection(request, response) {
     
     
     let filteredSubSection = services.filterSubSection(request, Section, SectionKey);
-    if (filteredSubSection.Error === true ) return controller.errorHandler(response, filteredSubSection);
+    if (filteredSubSection.Error === true ) return errorHandler(response, filteredSubSection);
     if (Array.isArray(filteredSubSection)) filteredSubSection = filteredSubSection[0];
 
     services.deleteSubSection(filteredSubSection, Section);
