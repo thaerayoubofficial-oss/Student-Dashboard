@@ -8,27 +8,50 @@ app.use(cors());
 app.use(express.json());
 
 
+function throwError(message, status) {
+    const error = new Error(message);
+    error.status = status;
+    return error;
+} 
 
+function handleErrors(errorObject, next, key, SectionKey) {
+    if (errorObject === undefined) {
+        console.log(`${errorObject} doesn't have an error field, or there are no errors`);
+    }
 
-
-
-function errorHandler(response, object) {
-    switch (object.Code) {
-        
-        case data.ErrorCodes.SECTION_NOT_FOUND:
-        case data.ErrorCodes.SECTION_KEY_NOT_FOUND:
-            return response.status(404).send(object.Message);
-        
+    switch (errorObject) {
         case data.ErrorCodes.KEY_NOT_FOUND:
-            return response.status(400).send(object.Message);
-
-        default:
-            return response.status(400).send(`Something went wrong`);
-
+            return next(throwError(`There is no ${key} in ${SectionKey}`, 404));
+        case data.ErrorCodes.SECTION_NOT_FOUND:
+            return next(throwError(`The ${SectionKey} doesn't exist`, 404));
     }
 }
 
+function sectionError(request, next) {
+    const SectionKey = request.params.Section;
+    const Section = services.getSection(SectionKey);
+    if (Section["error"] !== undefined) {
+        return next(throwError(`There is no ${SectionKey} is the dashboard`), 404);
+    }
+    return Section;
+}
 
+
+function subSectionError(request, next) {
+    const Section = sectionError(request, next);
+    if (Section["error"] !== undefined) return;
+
+    
+    const filteredSubSection = services.filterSubSection(request, Section["object"], Section["SectionKey"]);
+    const errorResponse = handleErrors(filteredSubSection["error"], next, filteredSubSection["key"], filteredSubSection["SectionKey"]);
+
+    if (filteredSubSection["error"] === undefined) {
+        return filteredSubSection;
+    }
+
+    return filteredSubSection["error"] === data.ErrorCodes.PARAMETERS_NOT_FOUND ? Section["object"] : errorResponse;
+
+}
 
 
 // ------------------------------ GET ------------------------------
@@ -39,69 +62,56 @@ function GET(request, response) {
 }
 
 
-function GETSection(request, response) {
-    const SectionKey = request.params.Section;
-    const Section = services.getSection(SectionKey);
-    if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
-
-    const filteredSubSection = services.filterSubSection(request, Section, SectionKey);
-    if (!filteredSubSection.Error && filteredSubSection.Code == data.ErrorCodes.PARAMETERS_NOT_FOUND) {
-        return response.status(200).json(Section);
-    }
-    
-    if (filteredSubSection.Error === true ) return errorHandler(response, filteredSubSection);
-
+function GETSection(request, response, next) {
+    const filteredSubSection = subSectionError(request, next);
+    if (filteredSubSection["error"] !== undefined) return;
     return response.status(200).json(filteredSubSection);
-
 }
 
 
-function POSTSection(request, response) {
-    const SectionKey = request.params.Section;
-    const Section = services.getSection(SectionKey);
-    if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
+function POSTSection(request, response, next) {
+    const Section = sectionError(request, next);
+    if (Section["error"] !== undefined) return;
 
     
     const clientData = request.body;
-    const newSubSection = services.createSubSection(clientData, SectionKey, Section);
-    if (newSubSection.Error === true) return errorHandler(response, newSubSection, Section);
-    return response.status(201).json(newSubSection);
+    const newSubSection = services.createSubSection(clientData, Section["SectionKey"], Section["object"]);
+    const errorResponse = handleErrors(newSubSection["error"], next, newSubSection["key"], newSubSection["SectionKey"]);
+    return newSubSection["error"] === undefined ? response.status(201).json(newSubSection) : errorResponse;
 }
 
 
 
-function DELETESection(request, response) {
-    const SectionKey = request.params.Section;
-    const Section = services.getSection(SectionKey);
-    if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
-    
-    
-    let filteredSubSection = services.filterSubSection(request, Section, SectionKey);
-    if (filteredSubSection.Error === true ) return errorHandler(response, filteredSubSection);
-    if (Array.isArray(filteredSubSection)) filteredSubSection = filteredSubSection[0];
+function DELETESection(request, response, next) {
+    const Section = sectionError(request, next);
+    if (Section["error"] !== undefined) return;
 
-    services.deleteSubSection(filteredSubSection, Section);
-    return response.status(200).send(`The ${SectionKey} has been deleted`);
+    const filteredSubSection = subSectionError(request, next);
+    if (filteredSubSection["error"] !== undefined) return;
+
+
+    services.deleteSubSection(filteredSubSection["object"], Section["object"]);
+    return response.status(200).send(`The ${Section["SectionKey"]} has been deleted`);
     
 }
 
 
 
-function PUTSection(request, response) {
-    const SectionKey = request.params.Section;
-    const Section = services.getSection(SectionKey);
-    if (Section.Error === true) return response.status(404).send(Section.Message ?? "Not Found");
+function PUTSection(request, response, next) {
+    const Section = sectionError(request, next);
+    if (Section["error"] !== undefined) return;
 
-    let filteredSubSection = services.filterSubSection(request, Section, SectionKey);
-    if (filteredSubSection.Error === true ) return errorHandler(response, filteredSubSection);
-    if (Array.isArray(filteredSubSection)) filteredSubSection = filteredSubSection[0];
+    const filteredSubSection = subSectionError(request, next);
+    if (filteredSubSection["error"] !== undefined) return;
 
     const clientData = request.body;
+    const newSubSection = services.putSubSection(clientData, Section["SectionKey"], Section["object"], filteredSubSection);
     
-    const newSubSection = services.putSubSection(clientData, SectionKey, Section, filteredSubSection);
-    if (newSubSection.Error === true) return errorHandler(response, newSubSection);
-    return response.status(200).send(`The ${SectionKey} has been successfully replaced`);
+    const errorResponse = handleErrors(newSubSection["error"], next, newSubSection["key"], newSubSection["SectionKey"]);
+    return newSubSection["error"] === undefined ? response.status(200).send(`The ${Section["SectionKey"]} has been successfully replaced`) : errorResponse;
 }
 
 
-module.exports = { GET, GETSection, POSTSection, DELETESection, PUTSection, errorHandler };
+
+
+module.exports = { GET, GETSection, POSTSection, DELETESection, PUTSection };

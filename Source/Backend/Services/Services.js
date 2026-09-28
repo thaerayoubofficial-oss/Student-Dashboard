@@ -1,17 +1,14 @@
 const data = require('../Data/Classes_Data');
 
-function throwError(Error, Message, Code) {
-    return {
-        Error: Error,
-        Message: Message,
-        Code: Code
-    };
-} 
 
 function getSection(SectionKey) {
     const Section = data.Sections[SectionKey];
-    if (Section === undefined) return throwError(true, `There is no ${SectionKey} in the dashboard`, data.ErrorCodes.SECTION_NOT_FOUND);
-   return Section;
+    let error;
+    if (Section === undefined) {
+        error = data.ErrorCodes.SECTION_NOT_FOUND;
+        return {"error": error, "Section": undefined};
+    }
+   return {"object" : Section, "error": error, "SectionKey": SectionKey};
 }
 
 
@@ -21,72 +18,81 @@ function filterSubSection(request, Section, SectionKey) {
     //FIXME: Fixed bugs, multiple filters is the only implementation left to do.
 
     let query = Object.assign({}, request.query);
+    let error;
    
-    if (Object.keys(query).length === 0) return throwError(false, `There were no parameters`, data.ErrorCodes.PARAMETERS_NOT_FOUND);
-   
+    if (Object.keys(query).length === 0) {
+        error = data.ErrorCodes.PARAMETERS_NOT_FOUND;
+        return {"error": error};
+    }
 
     let params = Object.entries(query);
     
     let [key, value] = params[0];
-
+    
     if (!Object.keys(Section[0]).includes(key)) {
-        return throwError(true, `There is no ${key} in ${SectionKey}`, data.ErrorCodes.KEY_NOT_FOUND);
+        error = data.ErrorCodes.KEY_NOT_FOUND;
+        return {"key": key, "SectionKey": SectionKey, "error": error};
     }
-
+    
     const filtered = Section.filter(fieldElement => fieldElement[key].replace(/\s+/g, '') === value.replace(/\s+/g, ''));
-    return filtered.length > 0 ? filtered : throwError(true, `The ${SectionKey} doesn't exist`, data.ErrorCodes.SECTION_KEY_NOT_FOUND);
-
+    
+    if (filtered.length === 0) {
+        error = data.ErrorCodes.SECTION_KEY_NOT_FOUND;
+        return {"key": key, "SectionKey": SectionKey, "error": error};
+    }
+    
+    return {"object": filtered, "error": undefined};
     
 }
 
 
-
-function createSubSection(clientData, SectionKey, Section) {
+function addUserData(clientData, SectionKey, replacement, filteredSubSection) {
     const newSubSection = {};
+    let error;
 
     for(const [key, value] of Object.entries(clientData)) {
-        if (!data.sectionFields[SectionKey].includes(key)) return throwError(true, `${key} is a field that isn't found in ${SectionKey}`, data.ErrorCodes.KEY_NOT_FOUND); 
+        if (!data.sectionFields[SectionKey].includes(key)) {
+            error = data.ErrorCodes.KEY_NOT_FOUND;
+            return {"error": error, "SectionKey": SectionKey, "key": key};
+        } 
         newSubSection[key] = value;
     }
 
     for (let sectionField of data.sectionFields[SectionKey]) {
         if(newSubSection[sectionField] === undefined) {
-            newSubSection[sectionField] = "Not Specified";
+            if (replacement === true && filteredSubSection?.[sectionField] !== undefined) {
+                newSubSection[sectionField] = filteredSubSection[sectionField];
+            } else {
+                newSubSection[sectionField] = "Not Specified";
+            } 
         }        
     }
 
-    Section.push(newSubSection);
     return newSubSection;
+}
+
+function createSubSection(clientData, SectionKey, SectionObj) {
+    const newSubSection = addUserData(clientData, SectionKey, SectionObj, false, undefined);
+    if (newSubSection["error"] !== undefined) return newSubSection;
+    SectionObj.push(newSubSection);
+    return {"object": newSubSection, "error": undefined};
 }
 
 
 
-function deleteSubSection(filteredSubSection, Section) {
-    
-   
-    const indexOfFilteredSection = Section.indexOf(filteredSubSection);
-    
-    Section.splice(indexOfFilteredSection, 1);
+function deleteSubSection(filteredSubSection, SectionObj) {
+    const indexOfFilteredSection = SectionObj.indexOf(filteredSubSection);
+    SectionObj.splice(indexOfFilteredSection, 1);
 }
 
 
-function putSubSection(clientData, SectionKey, Section, filteredSubSection) {
-    const newSubSection = {};
+function putSubSection(clientData, SectionKey, SectionObj, filteredSubSection) {
+    const newSubSection = addUserData(clientData, SectionKey, true, filteredSubSection);
+    if (newSubSection["error"] !== undefined) return;
 
-
-    for(const [key, value] of Object.entries(clientData)) {
-        if (!data.sectionFields[SectionKey].includes(key)) return throwError(true, `${key} is a field that isn't found in ${SectionKey}`, data.ErrorCodes.KEY_NOT_FOUND); 
-        newSubSection[key] = value;
-    }
-
-    for (let sectionField of data.sectionFields[SectionKey]) {
-        if(newSubSection[sectionField] === undefined) {
-            newSubSection[sectionField] = filteredSubSection[sectionField];
-        }        
-    }
-
-    Section.splice(Section.indexOf(filteredSubSection), 1, newSubSection);
-    return newSubSection;
+    let replacementIndex = SectionObj.indexOf(filteredSubSection["object"][0]);
+    SectionObj.splice(replacementIndex, 1, newSubSection);
+    return {"object": newSubSection, "error": undefined};
 }
 
 
