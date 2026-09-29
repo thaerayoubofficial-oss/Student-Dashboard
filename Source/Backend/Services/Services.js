@@ -6,7 +6,7 @@ function getSection(SectionKey) {
     let error;
     if (Section === undefined) {
         error = data.ErrorCodes.SECTION_NOT_FOUND;
-        return {"error": error, "Section": undefined};
+        return {"object": undefined, "error": error, "SectionKey": SectionKey};
     }
    return {"object" : Section, "error": error, "SectionKey": SectionKey};
 }
@@ -22,7 +22,7 @@ function filterSubSection(request, Section, SectionKey) {
    
     if (Object.keys(query).length === 0) {
         error = data.ErrorCodes.PARAMETERS_NOT_FOUND;
-        return {"error": error};
+        return {"object": undefined, "error": error, "key": undefined, "SectionKey": SectionKey};
     }
 
     let params = Object.entries(query);
@@ -31,17 +31,17 @@ function filterSubSection(request, Section, SectionKey) {
     
     if (!Object.keys(Section[0]).includes(key)) {
         error = data.ErrorCodes.KEY_NOT_FOUND;
-        return {"key": key, "SectionKey": SectionKey, "error": error};
+        return {"object": undefined, "error": error, "key": key, "SectionKey": SectionKey};
     }
     
     const filtered = Section.filter(fieldElement => fieldElement[key].replace(/\s+/g, '') === value.replace(/\s+/g, ''));
     
     if (filtered.length === 0) {
-        error = data.ErrorCodes.SECTION_KEY_NOT_FOUND;
-        return {"key": key, "SectionKey": SectionKey, "error": error};
+        error = data.ErrorCodes.SUBSECTION_NOT_FOUND;
+        return {"object": undefined, "error": error, "key": key, "SectionKey": SectionKey};
     }
     
-    return {"object": filtered, "error": undefined};
+    return {"object": filtered, "error": undefined, "key": key, "SectionKey": SectionKey};
     
 }
 
@@ -50,32 +50,35 @@ function addUserData(clientData, SectionKey, replacement, filteredSubSection) {
     const newSubSection = {};
     let error;
 
+    if (Array.isArray(filteredSubSection["object"])) filteredSubSection["object"] = filteredSubSection["object"][0];
+
     for(const [key, value] of Object.entries(clientData)) {
         if (!data.sectionFields[SectionKey].includes(key)) {
             error = data.ErrorCodes.KEY_NOT_FOUND;
-            return {"error": error, "SectionKey": SectionKey, "key": key};
+            return {"object": undefined, "error": error, "key": key, "SectionKey": SectionKey};
         } 
         newSubSection[key] = value;
     }
 
     for (let sectionField of data.sectionFields[SectionKey]) {
         if(newSubSection[sectionField] === undefined) {
-            if (replacement === true && filteredSubSection?.[sectionField] !== undefined) {
-                newSubSection[sectionField] = filteredSubSection[sectionField];
+            if (replacement === true && filteredSubSection["object"]?.[sectionField] !== undefined) {
+                newSubSection[sectionField] = filteredSubSection["object"][sectionField];
             } else {
                 newSubSection[sectionField] = "Not Specified";
             } 
         }        
     }
 
-    return newSubSection;
+    return {"object": newSubSection, "error": error, "key": undefined, "SectionKey": SectionKey};
+;
 }
 
 function createSubSection(clientData, SectionKey, SectionObj) {
     const newSubSection = addUserData(clientData, SectionKey, SectionObj, false, undefined);
-    if (newSubSection["error"] !== undefined) return newSubSection;
-    SectionObj.push(newSubSection);
-    return {"object": newSubSection, "error": undefined};
+    if (newSubSection["error"] !== undefined) return;
+    SectionObj.push(newSubSection["object"]);
+    return {"object": newSubSection["object"], "error": undefined};
 }
 
 
@@ -91,8 +94,8 @@ function putSubSection(clientData, SectionKey, SectionObj, filteredSubSection) {
     if (newSubSection["error"] !== undefined) return;
 
     let replacementIndex = SectionObj.indexOf(filteredSubSection["object"][0]);
-    SectionObj.splice(replacementIndex, 1, newSubSection);
-    return {"object": newSubSection, "error": undefined};
+    SectionObj.splice(replacementIndex, 1, newSubSection["object"]);
+    return {"object": newSubSection["object"], "error": undefined};
 }
 
 

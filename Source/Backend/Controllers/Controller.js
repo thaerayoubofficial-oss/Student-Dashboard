@@ -24,6 +24,8 @@ function handleErrors(errorObject, next, key, SectionKey) {
             return next(throwError(`There is no ${key} in ${SectionKey}`, 404));
         case data.ErrorCodes.SECTION_NOT_FOUND:
             return next(throwError(`The ${SectionKey} doesn't exist`, 404));
+        case data.ErrorCodes.SUBSECTION_NOT_FOUND:
+            return next(throwError(`Not Found`, 404));
     }
 }
 
