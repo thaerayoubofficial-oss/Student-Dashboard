@@ -15,7 +15,7 @@ function getSection(SectionKey) {
 
 function filterSubSection(request, Section, SectionKey) {
 
-    //FIXME: Fixed bugs, multiple filters is the only implementation left to do.
+    //TODO: Fixed bugs, multiple filters is the only implementation left to do.
 
     let query = Object.assign({}, request.query);
     let error;
@@ -90,7 +90,7 @@ function deleteSubSection(filteredSubSection, SectionObj) {
 
 
 function putSubSection(clientData, SectionKey, SectionObj, filteredSubSection) {
-    const newSubSection = addUserData(clientData, SectionKey, true, filteredSubSection);
+    const newSubSection = addUserData(clientData, SectionKey, false);
     if (newSubSection["error"] !== undefined) return;
 
     let replacementIndex = SectionObj.indexOf(filteredSubSection["object"][0]);
@@ -99,4 +99,16 @@ function putSubSection(clientData, SectionKey, SectionObj, filteredSubSection) {
 }
 
 
-module.exports = {getSection, filterSubSection, createSubSection, deleteSubSection, putSubSection};
+function patchSubSection(clientData, SectionKey, SectionObj, filteredSubSection) {
+    const newSubSection = addUserData(clientData, SectionKey, true, filteredSubSection);
+    if (newSubSection["error"] !== undefined) return;
+
+    let replacementIndex = SectionObj.indexOf(filteredSubSection["object"][0]);
+    SectionObj.splice(replacementIndex, 1, newSubSection["object"]);
+    return {"object": newSubSection["object"], "error": undefined};
+
+}
+
+
+
+module.exports = {getSection, filterSubSection, createSubSection, deleteSubSection, putSubSection, patchSubSection};

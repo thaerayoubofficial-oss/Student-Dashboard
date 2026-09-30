@@ -8,6 +8,7 @@ router.get('/:Section', controller.GETSection);
 router.post('/:Section', controller.POSTSection);
 router.put('/:Section', controller.PUTSection);
 router.delete('/:Section', controller.DELETESection);
+router.patch('/:Section', controller.PATCHSection);
 
 
 module.exports = router;

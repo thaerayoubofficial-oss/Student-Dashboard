@@ -114,6 +114,20 @@ function PUTSection(request, response, next) {
 }
 
 
+function PATCHSection(request, response, next) {
+    const Section = sectionError(request, next);
+    if (Section["error"] !== undefined) return;
+
+    const filteredSubSection = subSectionError(request, next);
+    if (filteredSubSection["error"] !== undefined) return;
+
+    const clientData = request.body;
+    const newSubSection = services.patchSubSection(clientData, Section["SectionKey"], Section["object"], filteredSubSection);
+    
+    const errorResponse = handleErrors(newSubSection["error"], next, newSubSection["key"], newSubSection["SectionKey"]);
+    return newSubSection["error"] === undefined ? response.status(200).send(`The ${Section["SectionKey"]} has been successfully edited`) : errorResponse;
+
+}
 
 
-module.exports = { GET, GETSection, POSTSection, DELETESection, PUTSection };
+module.exports = { GET, GETSection, POSTSection, DELETESection, PUTSection, PATCHSection };
