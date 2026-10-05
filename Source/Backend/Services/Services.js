@@ -71,7 +71,6 @@ function addUserData(clientData, SectionKey, replacement, filteredSubSection) {
     }
 
     return {"object": newSubSection, "error": error, "key": undefined, "SectionKey": SectionKey};
-;
 }
 
 function createSubSection(clientData, SectionKey, SectionObj) {
@@ -102,7 +101,7 @@ function putSubSection(clientData, SectionKey, SectionObj, filteredSubSection) {
 function patchSubSection(clientData, SectionKey, SectionObj, filteredSubSection) {
     const newSubSection = addUserData(clientData, SectionKey, true, filteredSubSection);
     if (newSubSection["error"] !== undefined) return;
-
+    
     let replacementIndex = SectionObj.indexOf(filteredSubSection["object"][0]);
     SectionObj.splice(replacementIndex, 1, newSubSection["object"]);
     return {"object": newSubSection["object"], "error": undefined};
@@ -111,4 +110,4 @@ function patchSubSection(clientData, SectionKey, SectionObj, filteredSubSection)
 
 
 
-module.exports = {getSection, filterSubSection, createSubSection, deleteSubSection, putSubSection, patchSubSection};
+module.exports = {getSection, filterSubSection, createSubSection, deleteSubSection, putSubSection, patchSubSection};  

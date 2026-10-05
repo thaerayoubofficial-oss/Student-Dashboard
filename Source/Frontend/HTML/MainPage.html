@@ -1,17 +1,361 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Student Dashboard</title>
+
     <link rel="stylesheet" href="../CSS/MainPage.css">
+
+    <!-- Google Fonts -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Graduate&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet"
+    >
+
 </head>
+
+
 <body>
-    <nav id="navigationBar">
-        <a id="home" href="./MainPage.html" class="navigationBarElements"> Home </a>
-        <a id="getStarted" class="navigationBarElements"> Get Started </a>
-        <a id="Sign In" class="navigationBarElements"> Sign In </a>
-        <a id="aboutUs" class="navigationBarElements"> About Us </a>
-    </nav>
+
+
+    <!-- =====================================================
+         HOME / HERO
+    ====================================================== -->
+
+    <section id="homeSection">
+
+
+        <!-- Navigation -->
+
+        <nav id="navigationBar">
+
+            <a href="#homeSection" id="Title">
+                Student Dashboard
+            </a>
+
+
+            <a href="#homeSection" class="navigationBarElements">
+                Home
+            </a>
+
+
+            <a href="#getStartedSection" class="navigationBarElements">
+                Get Started
+            </a>
+
+
+            <a href="#signInSection" class="navigationBarElements">
+                Sign In
+            </a>
+
+
+            <a href="#aboutUsText" class="navigationBarElements">
+                About Us
+            </a>
+
+
+            <a href="#contactUsText" class="navigationBarElements">
+                Contact Us
+            </a>
+
+        </nav>
+
+
+
+        <!-- Hero Text -->
+
+        <div class="homeText">
+
+            <h1>
+                Welcome!
+            </h1>
+
+
+            <h2 id="heroSubtitle">
+
+                <span>
+                    We know how difficult college can be!
+                </span>
+
+                <br>
+
+                <span>
+                    We are here to make it less intimidating!
+                </span>
+
+            </h2>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         GET STARTED
+    ====================================================== -->
+
+    <section id="getStartedSection">
+
+
+        <div class="getStartedText">
+
+            <h1>
+                Get Started!
+            </h1>
+
+            <p>
+                Create your student account and get started.
+            </p>
+
+        </div>
+
+
+
+        <!-- Sign Up Form -->
+
+        <form id="signUpForm">
+
+
+            <!-- First Name -->
+
+            <div class="form-group">
+
+                <label for="firstname">
+                    First Name
+                </label>
+
+                <div class="input-container">
+
+                    <span aria-hidden="true">
+                        👤
+                    </span>
+
+                    <input
+                        type="text"
+                        id="firstname"
+                        name="firstname"
+                        placeholder="John"
+                        autocomplete="given-name"
+                    >
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Last Name -->
+
+            <div class="form-group">
+
+                <label for="lastname">
+                    Last Name
+                </label>
+
+                <div class="input-container">
+
+                    <span aria-hidden="true">
+                        👤
+                    </span>
+
+                    <input
+                        type="text"
+                        id="lastname"
+                        name="lastname"
+                        placeholder="Doe"
+                        autocomplete="family-name"
+                    >
+
+                </div>
+
+            </div>
+
+
+
+            <!-- University -->
+
+            <div class="form-group">
+
+                <label for="university">
+                    University
+                </label>
+
+                <div class="input-container">
+
+                    <span aria-hidden="true">
+                        🎓
+                    </span>
+
+                    <input
+                        type="text"
+                        id="university"
+                        name="university"
+                        placeholder="Your university"
+                        autocomplete="organization"
+                    >
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Email -->
+
+            <div class="form-group">
+
+                <label for="email">
+                    Email
+                </label>
+
+                <div class="input-container">
+
+                    <span aria-hidden="true">
+                        ✉
+                    </span>
+
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                    >
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Password -->
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <div class="input-container">
+
+                    <span aria-hidden="true">
+                        🔒
+                    </span>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Create a password"
+                        autocomplete="new-password"
+                    >
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Confirm Password -->
+
+            <div class="form-group">
+
+                <label for="confirmpassword">
+                    Confirm Password
+                </label>
+
+                <div class="input-container">
+
+                    <span aria-hidden="true">
+                        🔒
+                    </span>
+
+                    <input
+                        type="password"
+                        id="confirmpassword"
+                        name="confirmpassword"
+                        placeholder="Repeat your password"
+                        autocomplete="new-password"
+                    >
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Submit -->
+
+            <button
+                type="submit"
+                id="signUpButton"
+            >
+                Get Started →
+            </button>
+
+
+        </form>
+
+
+    </section>
+
+
+
+
+    <!-- =====================================================
+         ABOUT US
+    ====================================================== -->
+
+    <section id="aboutUsText">
+
+        <h1>
+            About Us!
+        </h1>
+
+        <p>
+            We are a non-profit that aims to provide
+            the best experience to students free of charge.
+            <br>
+            This website was designed by a student,
+            for students.
+            <br>
+            And it will always be free.
+        </p>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         CONTACT US
+    ====================================================== -->
+
+    <section id="contactUsText">
+
+        <h1>
+            Contact Us!
+        </h1>
+
+        <p>
+            You can contact us via Email:
+            thaer.ayoub.official@gmail.com
+        </p>
+
+    </section>
+
+
 </body>
+
 </html>
