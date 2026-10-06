@@ -29,6 +29,9 @@ function filterSubSection(request, Section, SectionKey) {
     
     let [key, value] = params[0];
     
+
+    if (Section === undefined) return getSection(SectionKey);
+
     if (!Object.keys(Section[0]).includes(key)) {
         error = data.ErrorCodes.KEY_NOT_FOUND;
         return {"object": undefined, "error": error, "key": key, "SectionKey": SectionKey};
@@ -46,11 +49,15 @@ function filterSubSection(request, Section, SectionKey) {
 }
 
 
-function addUserData(clientData, SectionKey, replacement, filteredSubSection) {
+function addClientData(clientData, SectionKey) {
     const newSubSection = {};
     let error;
 
-    if (Array.isArray(filteredSubSection["object"])) filteredSubSection["object"] = filteredSubSection["object"][0];
+    if (clientData === undefined) {
+        error = data.ErrorCodes.CLIENT_DATA_NOT_FOUND;
+        return {"object": undefined, "error": error, "key": undefined, "SectionKey": SectionKey};
+    }
+
 
     for(const [key, value] of Object.entries(clientData)) {
         if (!data.sectionFields[SectionKey].includes(key)) {
@@ -59,6 +66,17 @@ function addUserData(clientData, SectionKey, replacement, filteredSubSection) {
         } 
         newSubSection[key] = value;
     }
+
+    return {"object": newSubSection, "error": error, "key": undefined, "SectionKey": SectionKey};
+
+}
+
+function manageClientData(clientData, SectionKey, replacement, filteredSubSection) {
+    
+    if (Array.isArray(filteredSubSection["object"])) filteredSubSection["object"] = filteredSubSection["object"][0];
+    
+    const newSubSection = addClientData(clientData, SectionKey);
+    if (newSubSection["error"] !== undefined) return newSubSection;
 
     for (let sectionField of data.sectionFields[SectionKey]) {
         if(newSubSection[sectionField] === undefined) {
@@ -70,39 +88,60 @@ function addUserData(clientData, SectionKey, replacement, filteredSubSection) {
         }        
     }
 
-    return {"object": newSubSection, "error": error, "key": undefined, "SectionKey": SectionKey};
+    return {"object": newSubSection, "error": undefined, "key": undefined, "SectionKey": SectionKey};
 }
 
 function createSubSection(clientData, SectionKey, SectionObj) {
-    const newSubSection = addUserData(clientData, SectionKey, SectionObj, false, undefined);
-    if (newSubSection["error"] !== undefined) return;
+    const newSubSection = addClientData(clientData, SectionKey);
+    if (newSubSection["error"] !== undefined) return newSubSection;
+    
     SectionObj.push(newSubSection["object"]);
     return {"object": newSubSection["object"], "error": undefined};
 }
 
 
 
-function deleteSubSection(filteredSubSection, SectionObj) {
-    const indexOfFilteredSection = SectionObj.indexOf(filteredSubSection);
+function deleteSubSection(filteredSubSectionObj, SectionObj) {
+    const indexOfFilteredSection = SectionObj.indexOf(filteredSubSectionObj);
+    let error;
+    if (indexOfFilteredSection === -1) {
+        error = data.ErrorCodes.SECTION_NOT_FOUND;
+        return {"error": error};
+    }
     SectionObj.splice(indexOfFilteredSection, 1);
+
+    return {"error": undefined};
 }
 
 
 function putSubSection(clientData, SectionKey, SectionObj, filteredSubSection) {
-    const newSubSection = addUserData(clientData, SectionKey, false);
-    if (newSubSection["error"] !== undefined) return;
+    const newSubSection = manageClientData(clientData, SectionKey, false);
+    let error;
+    if (newSubSection["error"] !== undefined) return newSubSection;
 
-    let replacementIndex = SectionObj.indexOf(filteredSubSection["object"][0]);
+    let replacementIndex = SectionObj.indexOf(filteredSubSection["object"][0]); 
+    
+    if (replacementIndex === -1) {
+        error = data.ErrorCodes.SECTION_NOT_FOUND;
+        return {"object": newSubSection["object"], "error": error}
+    }
+    
     SectionObj.splice(replacementIndex, 1, newSubSection["object"]);
     return {"object": newSubSection["object"], "error": undefined};
 }
 
 
 function patchSubSection(clientData, SectionKey, SectionObj, filteredSubSection) {
-    const newSubSection = addUserData(clientData, SectionKey, true, filteredSubSection);
-    if (newSubSection["error"] !== undefined) return;
+    const newSubSection = manageClientData(clientData, SectionKey, true, filteredSubSection);
+    if (newSubSection["error"] !== undefined) return newSubSection;
     
     let replacementIndex = SectionObj.indexOf(filteredSubSection["object"][0]);
+    
+    if (replacementIndex === -1) {
+        error = data.ErrorCodes.SECTION_NOT_FOUND;
+        return {"object": newSubSection["object"], "error": error}
+    }
+
     SectionObj.splice(replacementIndex, 1, newSubSection["object"]);
     return {"object": newSubSection["object"], "error": undefined};
 
