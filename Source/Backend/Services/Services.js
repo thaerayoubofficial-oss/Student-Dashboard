@@ -42,7 +42,13 @@ function filterSubSection(request) {
         throwError(`${key} isn't found in ${sectionKey}`, data.ErrorCodes.KEY_NOT_FOUND);
     }
     
-    const filtered = section.find(fieldElement => fieldElement[key].replace(/\s+/g, '') === value.replace(/\s+/g, ''));
+    const filtered = section.find(fieldElement => {
+        if (typeof fieldElement[key] === 'string') {
+            return fieldElement[key].replace(/\s+/g, '').toLowerCase() === value.replace(/\s+/g, '').toLowerCase();
+        } else {
+            return fieldElement[key] === value;
+        }
+    });
     
     if (filtered === undefined) {
         throwError(`${key} = ${value} couldn't be filtered`, data.ErrorCodes.SUBSECTION_NOT_FOUND); 
@@ -55,7 +61,7 @@ function filterSubSection(request) {
 function addClientData(clientData, sectionKey) {
     const newSubSection = {};
 
-    if (clientData === undefined) {
+    if (clientData === null) {
         throwError(`The Client's Data are undefined`, data.ErrorCodes.CLIENT_DATA_NOT_FOUND);
     }
 
@@ -107,13 +113,14 @@ function deleteSubSection(filteredSubSection, sectionKey) {
     const indexOfFilteredSection = section.indexOf(filteredSubSection);
     
     if (indexOfFilteredSection === -1) {
-        throwError(`${sectionKey} isn't found`, data.ErrorCodes.SECTION_NOT_FOUND);
+        throwError(`${sectionKey} isn't found`, data.ErrorCodes.SUBSECTION_NOT_FOUND);
     }
     section.splice(indexOfFilteredSection, 1);
 }
 
 
-function putSubSection(clientData, sectionKey, section, filteredSubSection) {
+function putSubSection(clientData, sectionKey, filteredSubSection) {
+    const section = getSection(sectionKey);
     const newSubSection = manageClientData(clientData, sectionKey, false);
     let replacementIndex = section.indexOf(filteredSubSection); 
     
@@ -127,7 +134,8 @@ function putSubSection(clientData, sectionKey, section, filteredSubSection) {
 }
 
 
-function patchSubSection(clientData, sectionKey, section, filteredSubSection) {
+function patchSubSection(clientData, sectionKey, filteredSubSection) {
+    const section = getSection(sectionKey);
     const newSubSection = manageClientData(clientData, sectionKey, true, filteredSubSection);
     let replacementIndex = section.indexOf(filteredSubSection); 
     
@@ -139,6 +147,7 @@ function patchSubSection(clientData, sectionKey, section, filteredSubSection) {
     section.splice(replacementIndex, 1, newSubSection);
     return newSubSection;
 
+    
 }
 
 
