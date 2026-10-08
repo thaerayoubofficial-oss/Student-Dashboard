@@ -8,71 +8,27 @@ app.use(cors());
 app.use(express.json());
 
 
-function throwError(message, status) {
-    const error = new Error(message);
-    error.status = status;
-    return error;
-} 
 
-function handleErrors(errorObject, next, key, SectionKey) {
-    switch (errorObject) {
-        case data.ErrorCodes.KEY_NOT_FOUND:
-            if (key !== undefined) {
-                return next(
-                    throwError(`There is no ${key} in ${SectionKey}`, 404)
-                );
-            }
-
-            return next(
-                throwError(`The Key that was inputted is undefined`, 400)
-            );
-
-        case data.ErrorCodes.SECTION_NOT_FOUND:
-            if (SectionKey !== undefined && SectionKey !== '') {
-                return next(
-                    throwError(`The ${SectionKey} doesn't exist`, 404)
-                );
-            }
-
-            return next(
-                throwError(`The Section doesn't exist`, 404)
-            );
-
-        case data.ErrorCodes.SUBSECTION_NOT_FOUND:
-            return next(
-                throwError(`Not Found`, 404)
-            );
-
-        default:
-            return next(
-                throwError('Something went wrong', 400)
-            );
+function sectionHandler(request, next) {
+    const sectionKey = request.params.Section;
+    const section = services.getSection(sectionKey);
+    try {
+        return section;
+    } catch (error) {
+        return next(error);
     }
-}
-
-function sectionError(request, next) {
-    const SectionKey = request.params.Section;
-    const Section = services.getSection(SectionKey);
-    const errorResponse = handleErrors(Section["error"], next, undefined, SectionKey);
-    if (Section["error"] !== undefined) {
-        return errorResponse;
-    }
-    return Section;
 }
 
 
 function subSectionError(request, next) {
-    const Section = sectionError(request, next);
-    if (Section["error"] !== undefined) return Section;
-
-    
-    const filteredSubSection = services.filterSubSection(request, Section["object"], Section["SectionKey"]);
-    const errorResponse = handleErrors(filteredSubSection["error"], next, filteredSubSection["key"], filteredSubSection["SectionKey"]);
-
-    if (filteredSubSection["error"] === undefined) return filteredSubSection;
-
-    return filteredSubSection["error"] === data.ErrorCodes.PARAMETERS_NOT_FOUND ? Section["object"] : errorResponse;
-
+    const section = sectionHandler(request, next);    
+    const filteredSubSection = services.filterSubSection(request);
+    try {
+        return filteredSubSection;
+    } catch (error) {
+        if (error.code === data.ErrorCodes.PARAMETERS_NOT_FOUND) return section;
+        return next(error);
+    }
 }
 
 
@@ -92,7 +48,7 @@ function GETSection(request, response, next) {
 
 
 function POSTSection(request, response, next) {
-    const Section = sectionError(request, next);
+    const Section = sectionHandler(request, next);
     if (Section["error"] !== undefined) return Section;
 
     
@@ -106,7 +62,7 @@ function POSTSection(request, response, next) {
 
 
 function DELETESection(request, response, next) {
-    const Section = sectionError(request, next);
+    const Section = sectionHandler(request, next);
     if (Section["error"] !== undefined) return Section;
 
     const filteredSubSection = subSectionError(request, next);
@@ -125,7 +81,7 @@ function DELETESection(request, response, next) {
 
 
 function PUTSection(request, response, next) {
-    const Section = sectionError(request, next);
+    const Section = sectionHandler(request, next);
     if (Section["error"] !== undefined) return Section;
 
     const filteredSubSection = subSectionError(request, next);
@@ -142,7 +98,7 @@ function PUTSection(request, response, next) {
 
 
 function PATCHSection(request, response, next) {
-    const Section = sectionError(request, next);
+    const Section = sectionHandler(request, next);
     if (Section["error"] !== undefined) return Section;
 
     const filteredSubSection = subSectionError(request, next);

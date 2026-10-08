@@ -9,7 +9,7 @@ let Homework = [
     {Class: "Physics II", Due : "Wednesday"}
 ];
 
-let Sections = {
+let sections = {
     "Classes" : Classes,
     "Homework" : Homework,
     // "Assignment",
@@ -25,13 +25,14 @@ let sectionFields = {
 
 //TODO: Use Javscript/Node.js/Express Error handler if it exists
 let ErrorCodes = {
-    SECTION_NOT_FOUND: 'SECTION_NOT_FOUND',
-    KEY_NOT_FOUND: 'SECTION_NOT_FOUND',
-    SECTION_KEY_NOT_FOUND: 'SECTION_KEY_NOT_FOUND',
-    PARAMETERS_NOT_FOUND: 'PARAMETERS_NOT_FOUND',
-    SUBSECTION_NOT_FOUND: 'SUBSECTION_NOT_FOUND',
-    CLIENT_DATA_NOT_FOUND: 'CLIENT_DATA_NOT_FOUND'
+    SECTION_NOT_FOUND:          {code: 'SECTION_NOT_FOUND',             status: 404},
+    KEY_NOT_FOUND:              {code: 'KEY_NOT_FOUND',                 status: 400},
+    SECTION_KEY_NOT_FOUND:      {code: 'SECTION_KEY_NOT_FOUND',         status: 400},
+    PARAMETERS_NOT_FOUND:       {code: 'PARAMETERS_NOT_FOUND',          status: 404},
+    SUBSECTION_NOT_FOUND:       {code: 'SUBSECTION_NOT_FOUND',          status: 404},
+    CLIENT_DATA_NOT_FOUND:      {code: 'CLIENT_DATA_NOT_FOUND',         status: 404},
+    SUBSECTION_CANT_BE_CREATED: {code: 'SUBSECTION_CANT_BE_CREATED',    status: 400}
 };
 
 
-module.exports = {Classes, Homework, Sections, sectionFields, ErrorCodes};
+module.exports = {Classes, Homework, sections, sectionFields, ErrorCodes};
