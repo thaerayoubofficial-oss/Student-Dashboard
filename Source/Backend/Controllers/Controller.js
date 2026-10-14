@@ -108,10 +108,12 @@ function PUTSection(request, response) {
         filteredSubSection
     );
 
+    
     return response
         .status(200)
         .send(`The ${sectionKey} has been successfully replaced`);
-}
+
+    }
 
 
 // ------------------------------ PATCH ------------------------------
@@ -134,11 +136,17 @@ function PATCHSection(request, response) {
 }
 
 
+function signUp(request, response) {
+    console.log(request.body);
+    return response.status(200).send(`Info has been recevied`);
+}
+
 module.exports = {
     GET,
     GETSection,
     POSTSection,
     DELETESection,
     PUTSection,
-    PATCHSection
+    PATCHSection,
+    signUp
 };

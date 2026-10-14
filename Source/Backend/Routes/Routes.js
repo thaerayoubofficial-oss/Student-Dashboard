@@ -2,6 +2,13 @@ const express = require('express');
 const controller = require('../Controllers/Controller.js');
 const router = express.Router();
 
+router.use((req, res, next) => {
+    console.log('Incoming request:', req.method, req.originalUrl);
+    next();
+});
+
+
+router.post('/signup', controller.signUp);
 
 router.get('/', controller.GET);
 router.get('/:Section', controller.GETSection);
