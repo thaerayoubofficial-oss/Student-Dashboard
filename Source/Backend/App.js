@@ -1,9 +1,11 @@
 const express = require('express');
+const cors = require('cors');
 const ErrorHandler = require('./Middleware/ErrorHandler');
 
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 const sectionRoute = require(`./Routes/Routes`);

@@ -874,3 +874,79 @@ h1 {
         scroll-behavior: auto !important;
     }
 }
+
+/* Smooth label transition */
+.form-group label {
+    display: inline-block;
+
+    transition:
+        color 0.25s ease,
+        text-decoration-color 0.25s ease,
+        transform 0.25s ease;
+}
+
+
+/* Invalid label */
+.invalid-label {
+    color: #d93025;
+
+    text-decoration-line: underline;
+    text-decoration-color: #d93025;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 5px;
+
+    animation: invalid-label-shake 0.35s ease;
+}
+
+
+/* Error text */
+.field-error {
+    display: block;
+
+    margin-top: 8px;
+
+    color: #d93025;
+    font-size: 0.8rem;
+
+    animation: error-appear 0.25s ease forwards;
+}
+
+
+/* Small shake when invalid */
+@keyframes invalid-label-shake {
+
+    0% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-4px);
+    }
+
+    50% {
+        transform: translateX(4px);
+    }
+
+    75% {
+        transform: translateX(-2px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+
+/* Error message slides/fades in */
+@keyframes error-appear {
+
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

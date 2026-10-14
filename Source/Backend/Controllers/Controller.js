@@ -1,12 +1,6 @@
-const express = require('express');
-const cors = require('cors');
 const services = require('../Services/Services');
 const data = require('../Data/Classes_Data');
 
-const app = express();
-
-app.use(cors());
-app.use(express.json());
 
 
 // ------------------------------ HELPERS ------------------------------
@@ -63,10 +57,10 @@ function GETSection(request, response) {
 function POSTSection(request, response) {
 
     const sectionKey = request.params.Section;
-    const clientData = request.body;
+    const requestData = request.body;
 
     const newSubSection = services.createSubSection(
-        clientData,
+        requestData,
         sectionKey
     );
 
@@ -100,15 +94,15 @@ function PUTSection(request, response) {
 
     const sectionKey = request.params.Section;
     const filteredSubSection = subSectionHandler(request);
-    const clientData = request.body;
+    const requestData = request.body;
 
     services.putSubSection(
-        clientData,
+        requestData,
         sectionKey,
         filteredSubSection
     );
 
-    
+
     return response
         .status(200)
         .send(`The ${sectionKey} has been successfully replaced`);
@@ -122,10 +116,10 @@ function PATCHSection(request, response) {
 
     const sectionKey = request.params.Section;
     const filteredSubSection = subSectionHandler(request);
-    const clientData = request.body;
+    const requestData = request.body;
 
     services.patchSubSection(
-        clientData,
+        requestData,
         sectionKey,
         filteredSubSection
     );
@@ -137,8 +131,11 @@ function PATCHSection(request, response) {
 
 
 function signUp(request, response) {
-    console.log(request.body);
-    return response.status(200).send(`Info has been recevied`);
+    console.log("Sign up request received");
+
+    return response
+        .status(201)
+        .json("Client data received and processed successfully");
 }
 
 module.exports = {

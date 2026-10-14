@@ -38,7 +38,7 @@ function filterSubSection(request) {
 
   // Loop through each key-value pair in the query
   for (const [key, value] of Object.entries(query)) {
-    
+
     // Check if the key exists in the data structure
     if (!Object.keys(section[0]).includes(key)) {
       throwError(
@@ -50,7 +50,7 @@ function filterSubSection(request) {
     // Progressively filter the results array
     filteredResults = filteredResults.filter((fieldElement) => {
       const fieldVal = fieldElement[key];
-      
+
       if (typeof fieldVal === "string" && typeof value === "string") {
         return (
           fieldVal.replace(/\s+/g, "").toLowerCase() ===
@@ -74,18 +74,18 @@ function filterSubSection(request) {
   return filteredResults;
 }
 
-function addClientData(clientData, sectionKey) {
-  
+function addRequestData(requestData, sectionKey) {
+
   const newSubSection = {};
 
-  if (clientData === null) {
+  if (requestData === null) {
     throwError(
-      `The Client's Data are undefined`,
-      data.ErrorCodes.CLIENT_DATA_NOT_FOUND,
+      `The Request's Data are undefined`,
+      data.ErrorCodes.REQUEST_DATA_N0T_FOUND,
     );
   }
 
-  for (const [key, value] of Object.entries(clientData)) {
+  for (const [key, value] of Object.entries(requestData)) {
     if (!data.sectionFields[sectionKey].includes(key)) {
       throwError(
         `${key} isn't found in ${sectionKey}`,
@@ -98,13 +98,13 @@ function addClientData(clientData, sectionKey) {
   return newSubSection;
 }
 
-function manageClientData(
-  clientData,
+function manageRequestData(
+  requestData,
   sectionKey,
   replacement,
   filteredSubSection,
 ) {
-  const newSubSection = addClientData(clientData, sectionKey);
+  const newSubSection = addRequestData(requestData, sectionKey);
 
   if (Object.keys(newSubSection).length === 0) {
     throwError(
@@ -129,9 +129,9 @@ function manageClientData(
   return newSubSection;
 }
 
-function createSubSection(clientData, sectionKey) {
+function createSubSection(requestData, sectionKey) {
   const section = getSection(sectionKey);
-  const newSubSection = addClientData(clientData, sectionKey);
+  const newSubSection = addRequestData(requestData, sectionKey);
 
   section.push(newSubSection);
   return newSubSection;
@@ -150,9 +150,9 @@ function deleteSubSection(filteredSubSection, sectionKey) {
   section.splice(indexOfFilteredSection, 1);
 }
 
-function putSubSection(clientData, sectionKey, filteredSubSection) {
+function putSubSection(requestData, sectionKey, filteredSubSection) {
   const section = getSection(sectionKey);
-  const newSubSection = manageClientData(clientData, sectionKey, false);
+  const newSubSection = manageRequestData(requestData, sectionKey, false);
   let replacementIndex = section.indexOf(filteredSubSection);
 
   if (replacementIndex === -1) {
@@ -163,10 +163,10 @@ function putSubSection(clientData, sectionKey, filteredSubSection) {
   return newSubSection;
 }
 
-function patchSubSection(clientData, sectionKey, filteredSubSection) {
+function patchSubSection(requestData, sectionKey, filteredSubSection) {
   const section = getSection(sectionKey);
-  const newSubSection = manageClientData(
-    clientData,
+  const newSubSection = manageRequestData(
+    requestData,
     sectionKey,
     true,
     filteredSubSection,
@@ -181,6 +181,80 @@ function patchSubSection(clientData, sectionKey, filteredSubSection) {
   return newSubSection;
 }
 
+
+function clientDataHandler(request) {
+  const clientData = request.body;
+
+  if (clientData === null) {
+    throwError(
+      `The Client's Data are undefined`,
+      data.ErrorCodes.CLIENT_DATA_NOT_FOUND,
+    );
+  }
+
+  for (const [key, value] of Object.entries(clientData)) {
+    if (value === null || value === '') {
+      throwError(
+        `The Client's Data are Incomplete, The ${key} is missing`,
+        data.ErrorCodes.CLIENT_DATA_NOT_FOUND,
+      );
+    }
+
+
+    // ----------- Email validation ------------
+
+    if (key === 'email') {
+      if (!value.includes('@')) {
+        throwError(
+          `The Client's Data are Invalid, The ${key} is not a valid email`,
+          data.ErrorCodes.CLIENT_DATA_ARE_INVALID,
+        );
+      }
+
+      emailDomain = value.split('@')[1];
+      if (!emailDomain.includes('.')) {
+        throwError(
+          `The Client's Data are Invalid, The ${key} is not a valid email`,
+          data.ErrorCodes.CLIENT_DATA_ARE_INVALID,
+        );
+      }
+
+
+    }
+
+
+
+    // ----------- Password validation ------------
+
+    if (key === 'password') {
+      let hasCapital = /[A-Z]/.test(value);
+      let hasLower = /[a-z]/.test(value);
+      let hasNumber = /[0-9]/.test(value);
+      let hasMinimumLength = value.length >= 8;
+
+      if (!hasCapital || !hasLower || !hasNumber || !hasMinimumLength) {
+        throwError(
+          `The Client's Data are Invalid, The ${key} is not a valid password`,
+          data.ErrorCodes.CLIENT_DATA_ARE_INVALID,
+        );
+      }
+    }
+
+
+    if (key === 'confirmPassword') {
+      if (value !== clientData.password) {
+        throwError(
+          `The Client's Data are Invalid, The ${key} does not match the password`,
+          data.ErrorCodes.CLIENT_DATA_ARE_INVALID,
+        );
+      }
+    }
+  }
+
+  return clientData;
+}
+
+
 module.exports = {
   getSection,
   filterSubSection,
@@ -188,4 +262,5 @@ module.exports = {
   deleteSubSection,
   putSubSection,
   patchSubSection,
+  clientDataHandler
 };
