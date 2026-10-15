@@ -1,5 +1,6 @@
 const express = require('express');
 const controller = require('../Controllers/Controller.js');
+const authController = require('../Controllers/AuthController.js');
 const router = express.Router();
 
 router.use((req, res, next) => {
@@ -8,7 +9,7 @@ router.use((req, res, next) => {
 });
 
 
-router.post('/signup', controller.signUp);
+router.post('/signup', authController.signup);
 
 router.get('/', controller.GET);
 router.get('/:Section', controller.GETSection);

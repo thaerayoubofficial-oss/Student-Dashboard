@@ -57,7 +57,7 @@ function filterSubSection(request) {
           value.replace(/\s+/g, "").toLowerCase()
         );
       } else {
-        return fieldVal == value;
+        return fieldVal === value;
       }
     });
   }
@@ -181,86 +181,12 @@ function patchSubSection(requestData, sectionKey, filteredSubSection) {
   return newSubSection;
 }
 
-
-function clientDataHandler(request) {
-  const clientData = request.body;
-
-  if (clientData === null) {
-    throwError(
-      `The Client's Data are undefined`,
-      data.ErrorCodes.CLIENT_DATA_NOT_FOUND,
-    );
-  }
-
-  for (const [key, value] of Object.entries(clientData)) {
-    if (value === null || value === '') {
-      throwError(
-        `The Client's Data are Incomplete, The ${key} is missing`,
-        data.ErrorCodes.CLIENT_DATA_NOT_FOUND,
-      );
-    }
-
-
-    // ----------- Email validation ------------
-
-    if (key === 'email') {
-      if (!value.includes('@')) {
-        throwError(
-          `The Client's Data are Invalid, The ${key} is not a valid email`,
-          data.ErrorCodes.CLIENT_DATA_ARE_INVALID,
-        );
-      }
-
-      emailDomain = value.split('@')[1];
-      if (!emailDomain.includes('.')) {
-        throwError(
-          `The Client's Data are Invalid, The ${key} is not a valid email`,
-          data.ErrorCodes.CLIENT_DATA_ARE_INVALID,
-        );
-      }
-
-
-    }
-
-
-
-    // ----------- Password validation ------------
-
-    if (key === 'password') {
-      let hasCapital = /[A-Z]/.test(value);
-      let hasLower = /[a-z]/.test(value);
-      let hasNumber = /[0-9]/.test(value);
-      let hasMinimumLength = value.length >= 8;
-
-      if (!hasCapital || !hasLower || !hasNumber || !hasMinimumLength) {
-        throwError(
-          `The Client's Data are Invalid, The ${key} is not a valid password`,
-          data.ErrorCodes.CLIENT_DATA_ARE_INVALID,
-        );
-      }
-    }
-
-
-    if (key === 'confirmPassword') {
-      if (value !== clientData.password) {
-        throwError(
-          `The Client's Data are Invalid, The ${key} does not match the password`,
-          data.ErrorCodes.CLIENT_DATA_ARE_INVALID,
-        );
-      }
-    }
-  }
-
-  return clientData;
-}
-
-
 module.exports = {
+  throwError,
   getSection,
   filterSubSection,
   createSubSection,
   deleteSubSection,
   putSubSection,
-  patchSubSection,
-  clientDataHandler
+  patchSubSection
 };

@@ -130,20 +130,11 @@ function PATCHSection(request, response) {
 }
 
 
-function signUp(request, response) {
-    console.log("Sign up request received");
-
-    return response
-        .status(201)
-        .json("Client data received and processed successfully");
-}
-
 module.exports = {
     GET,
     GETSection,
     POSTSection,
     DELETESection,
     PUTSection,
-    PATCHSection,
-    signUp
+    PATCHSection
 };
