@@ -1,3 +1,4 @@
 node_modules/
 Source/Backend/Database/Test.js
 .env
+.vscode/settings.json
