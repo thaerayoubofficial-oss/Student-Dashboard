@@ -55,7 +55,7 @@ function validateConfirmPassword(confirmPassword, password) {
 
 async function userDataValidator(clientData) {
   
-  let userData = {...clientData};
+  let userData = {...clientData}; 
   if (userData == null) {
     services.throwError(
       `The Client's Data are undefined`,
@@ -88,7 +88,8 @@ async function userDataValidator(clientData) {
     }
   }
 
-  userData.password = await hashPassword(userData.password);
+  userData.password_hash = await hashPassword(userData.password);
+  delete userData.password;
   delete userData.confirmPassword;
 
   return userData;

@@ -128,8 +128,8 @@ signUpForm.addEventListener("submit", async (event) => {
             },
 
             body: JSON.stringify({
-                firstName: firstName.value.trim(),
-                lastName: lastName.value.trim(),
+                first_name: firstName.value.trim(),
+                last_name: lastName.value.trim(),
                 university: university.value.trim(),
                 email: email.value.trim(),
                 password: password.value,

@@ -1,3 +1,5 @@
+DELETE FROM users;
+
 -- @block
 CREATE TABLE IF NOT EXISTS users (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -6,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL
 );
+
 
 -- @block
 CREATE TABLE IF NOT EXISTS administrators (
