@@ -125,7 +125,7 @@ function manageRequestData(
       }
     }
   }
-
+ 
   return newSubSection;
 }
 
