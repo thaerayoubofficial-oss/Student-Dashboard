@@ -1,8 +1,6 @@
-const authServices = require('../Services/AuthServices.js');
 const userRepository = require('../Database/UserRepository.js');
 
-async function signup(request, response) {
-    const userData = await authServices.userDataValidator(request.body);
+async function signup(request, response) { 
     const newUser = await userRepository.createUser(userData);
     
     return response.status(201).json({
@@ -11,6 +9,16 @@ async function signup(request, response) {
     });
 }
 
+
+async function login(request, response) {
+    const userData = {...request.body};
+    const user = userRepository.getUserByEmail(userData)
+    for (const [key, value] of Object.entries(userData)) {
+        
+    }
+} 
+
 module.exports = {
     signup,
+    login
 };

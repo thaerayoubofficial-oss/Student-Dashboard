@@ -11,6 +11,8 @@ async function verifyPassword(hash, password) {
 }
 
 function validateEmail(email) {
+  if (email == null) services.throwError(`Email is Undefined`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
+
   if (!email.includes('@')) {
       services.throwError(
         `The Client's Data are Invalid, The ${email} is not a valid email`,
@@ -29,20 +31,26 @@ function validateEmail(email) {
 
 
 function validatePassword(password) {
-    let hasCapital = /[A-Z]/.test(password);
-    let hasLower = /[a-z]/.test(password);
-    let hasNumber = /[0-9]/.test(password);
-    let hasMinimumLength = password.length >= 8;
+  
+  if (password == null) services.throwError(`The Password is undefined`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
 
-    if (!hasCapital || !hasLower || !hasNumber || !hasMinimumLength) {
-      services.throwError(
-        `The Client's Data are Invalid, The Password is not valid`,
-        data.ErrorCodes.CLIENT_DATA_ARE_INVALID,
-      );
-    }
+  let hasCapital = /[A-Z]/.test(password);
+  let hasLower = /[a-z]/.test(password);
+  let hasNumber = /[0-9]/.test(password);
+  let hasMinimumLength = password.length >= 8;
+
+  if (!hasCapital || !hasLower || !hasNumber || !hasMinimumLength) {
+    services.throwError(
+      `The Client's Data are Invalid, The Password is not valid`,
+      data.ErrorCodes.CLIENT_DATA_ARE_INVALID,
+    );
+  }
 }
 
 function validateConfirmPassword(confirmPassword, password) {
+  if (password == null) services.throwError(`The Password is undefined`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
+  if (confirmPassword == null) services.throwError(`The Confirmation Password is undefined`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
+
   if (confirmPassword !== password) {
     services.throwError(
       `The Client's Data are Invalid, The Confirmed Password does not match the password`,
@@ -96,4 +104,4 @@ async function userDataValidator(clientData) {
 }
 
 
-module.exports = {userDataValidator};
+module.exports = {userDataValidator, validateEmail};

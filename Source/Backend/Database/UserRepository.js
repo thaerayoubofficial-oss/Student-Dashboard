@@ -1,10 +1,21 @@
 const databaseServices = require('../Database/DatabaseServices.js');
+const authServices = require('../Services/AuthServices.js');
 const services = require('./Services.js');
 const data = require('../Data/Classes_Data.js');
 
 
-async function createUser(userData) { 
-const [result] = await databaseServices.query(
+const allowedFilters = ["email", "id"];
+const editableColumns = ["first_name", "last_name", "university", "email"];
+
+function checkFilter(filter) {
+    if (!allowedFilters.includes(filter)) services.throwError(`This filter doesn't exist`, data.ErrorCodes.FILTER_ISNT_FOUND);
+}
+
+async function createUser(userData) {
+    
+    userData = await authServices.userDataValidator(userData);
+   
+    const [result] = await databaseServices.query(
     `INSERT INTO users
      (first_name, last_name, university, email, password_hash)
      VALUES (?, ?, ?, ?, ?)`,
@@ -21,107 +32,98 @@ const [result] = await databaseServices.query(
 }
 
 
-async function getUserById(id) {
-    const [filteredUser] = await databaseServices.query(`
-        SELECT * FROM users WHERE id = ?`, 
-        [id]
-    )[0];
+async function getUser(filter, filterValue) {
+
+    checkFilter(filter);
+
+    if (filterValue == null) services.throwError(`User ${filter} is invalid`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
+
+    const [result] = await databaseServices.query(`
+        SELECT * FROM users WHERE ${filter} = ?`, 
+        [filterValue]
+    );
+
+    const filteredUser = result[0];
 
     if (filteredUser == null) { 
         services.throwError(
-            `No user found with ID ${id}`,
+            `No user found with ID ${filterValue}`,
             data.ErrorCodes.USER_NOT_FOUND,
         );
     }
     return filteredUser;
 }
 
-async function getUserByEmail(email) {
-    const [filteredUser] = await databaseServices.query(`
-        SELECT * FROM users WHERE email = ?`, 
-        [email]
-    )[0];
+async function editUser(filter, filterValue, updatedData) { 
+    
+    checkFilter(filter);
 
-    if (filteredUser == null) {
-        services.throwError(
-            `No user found with the Email ${email}`,
-            data.ErrorCodes.USER_NOT_FOUND,
-        );
-    }
-    return filteredUser;
-}
+    if (filterValue == null) services.throwError(`User ${filter} is invalid`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
 
-async function editUser(id, updatedData) { 
-    const previousUserData = await getUserById(id); 
+    const previousUserData = await getUser(filter, filterValue); 
     const [result] = await databaseServices.query(
-        `UPDATE users SET first_name = ?, last_name = ?, university = ?, email = ? WHERE id = ?`,
+        `UPDATE users SET first_name = ?, last_name = ?, university = ?, email = ? WHERE ${filter} = ?`,
         [
             (updatedData.first_name == null || updatedData.first_name === '') ? previousUserData.first_name : updatedData.first_name,
             (updatedData.last_name == null || updatedData.last_name === '') ? previousUserData.last_name : updatedData.last_name,
             (updatedData.university == null || updatedData.university === '') ? previousUserData.university : updatedData.university,
             (updatedData.email == null || updatedData.email === '') ? previousUserData.email : updatedData.email,
-            id
+            filterValue
         ]
     );
 
     for (const key in updatedData) {
         if (updatedData[key] == null || updatedData[key] === '') { 
-            console.log(`The ${key} is missing in the updated data`); //TODO: use the middleware for this if needed.
+            console.log(`The ${key} is missing in the updated data`); // TODO: use the middleware for this if needed.
         }
     }
 
     if (result.affectedRows === 0) { 
         services.throwError(
-            `No user found with ID ${id} to update`,
+            `No user found with ${filter} ${filterValue} to update`,
             data.ErrorCodes.USER_NOT_FOUND,
         );
     }
 
-    console.log(`User with ID ${id} updated successfully`);
+    console.log(`User with ${filter} ${filterValue} updated successfully`);
     return result.affectedRows;
 }
 
-async function deleteUserById(id) {
+async function deleteUser(filter, filterValue) {
+    checkFilter(filter);
+
     const [result] = await databaseServices.query(
-        `DELETE FROM users WHERE id = ?`,
-        [id]
+        `DELETE FROM users WHERE ${filter} = ?`,
+        [filterValue]
     );
 
-    console.log(`User with the ID ${id} deleted successfully`);
+    console.log(`User with the ${filter} ${filterValue} deleted successfully`);
 }
 
 
-async function deleteUserByEmail(email) {
-    const [result] = await databaseServices.query(
-        `DELETE FROM users WHERE email = ?`,
-        [email]
-    );
+async function patchUserData(filter, filterValue, column, value) {
+    checkFilter(filter);
 
-    console.log(`User with the email ${email} deleted successfully`);
-}
+    let user = await getUser(filter, filterValue);
+    
+    if (!editableColumns.includes(column))
+        services.throwError(`You can't edit ${column}.`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
 
-
-async function patchUserDataById(id, property, value) {
-    let user = await getUserById(id);
-    if (property == 'id' || property == 'password_hash')
-        services.throwError(`You can't edit ${property}.`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
-
-
-    if (user?.[property] === undefined) 
-        services.throwError(`Property ${property} not found in user data`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
+    if (user?.[column] === undefined) 
+        services.throwError(`Property ${column} not found in user data`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
 
     const [result] = await databaseServices.query(`
-        UPDATE users SET ${property} = ? WHERE id  = ?`,
-    [value, id]);
+        UPDATE users SET ${column} = ? WHERE ${filter} = ?`,
+        [value, filterValue]
+    );
 
+    console.log(`The user's data has been successfully updated.`);
 }
 
 module.exports = {
     createUser,
-    getUserById,
-    getUserByEmail,
+    getUser,
     editUser,
-    deleteUserById,
-    deleteUserByEmail,
-    patchUserDataById
+    deleteUser,
+    patchUserData,
 };

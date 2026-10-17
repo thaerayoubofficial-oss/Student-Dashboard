@@ -32,6 +32,8 @@ let ErrorCodes = {
     SUBSECTION_NOT_FOUND:       {code: 'SUBSECTION_NOT_FOUND',          status: 404},
     CLIENT_DATA_NOT_FOUND:      {code: 'CLIENT_DATA_NOT_FOUND',         status: 404},
     CLIENT_DATA_ARE_INVALID:    {code: 'CLIENT_DATA_ARE_INVALID',       status: 400},
+    FILTER_ISNT_FOUND:          {code: 'FILTER_ISNT_FOUND',             status: 404},
+
     USER_NOT_FOUND:             {code: 'USER_NOT_FOUND',                status: 404},
     SUBSECTION_ALREADY_EXISTS:  {code: 'SUBSECTION_ALREADY_EXISTS',     status: 400},
     SUBSECTION_CANT_BE_UPDATED: {code: 'SUBSECTION_CANT_BE_UPDATED',    status: 400},

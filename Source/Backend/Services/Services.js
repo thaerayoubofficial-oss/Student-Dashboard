@@ -32,14 +32,12 @@ function filterSubSection(request) {
   if (!section || section.length === 0) {
     throwError(`Section is empty`, data.ErrorCodes.SUBSECTION_NOT_FOUND);
   }
-
-  // Start with the full section array
+  
+  // UHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
   let filteredResults = [...section];
 
-  // Loop through each key-value pair in the query
   for (const [key, value] of Object.entries(query)) {
 
-    // Check if the key exists in the data structure
     if (!Object.keys(section[0]).includes(key)) {
       throwError(
         `${key} isn't found in ${sectionKey}`,
@@ -47,7 +45,6 @@ function filterSubSection(request) {
       );
     }
 
-    // Progressively filter the results array
     filteredResults = filteredResults.filter((fieldElement) => {
       const fieldVal = fieldElement[key];
 
