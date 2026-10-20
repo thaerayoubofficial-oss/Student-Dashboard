@@ -12,7 +12,7 @@ async function signup(request, response) {
 
 async function login(request, response) {
     const userData = {...request.body};
-    const user = userRepository.getUserByEmail(userData)
+    const user = userRepository.getUser("email", userData.email);
     for (const [key, value] of Object.entries(userData)) {
         
     }

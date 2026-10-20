@@ -7,8 +7,18 @@ const data = require('../Data/Classes_Data.js');
 const allowedFilters = ["email", "id"];
 const editableColumns = ["first_name", "last_name", "university", "email"];
 
-function checkFilter(filter) {
+function checkFilter(filter, filterValue) {
     if (!allowedFilters.includes(filter)) services.throwError(`This filter doesn't exist`, data.ErrorCodes.FILTER_ISNT_FOUND);
+    if (filterValue == null) services.throwError(`User ${filter} is invalid`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
+
+    switch (filter) {
+        case "email":
+            authServices.validateEmail(filterValue);
+            break;
+
+        case "id":
+            if (typeof filterValue !== "number") services.throwError(`ID must be a number.`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
+    }
 }
 
 async function createUser(userData) {
@@ -34,9 +44,7 @@ async function createUser(userData) {
 
 async function getUser(filter, filterValue) {
 
-    checkFilter(filter);
-
-    if (filterValue == null) services.throwError(`User ${filter} is invalid`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
+    checkFilter(filter, filterValue);
 
     const [result] = await databaseServices.query(`
         SELECT * FROM users WHERE ${filter} = ?`, 
@@ -47,7 +55,7 @@ async function getUser(filter, filterValue) {
 
     if (filteredUser == null) { 
         services.throwError(
-            `No user found with ID ${filterValue}`,
+            `No user found with ${filter} ${filterValue}`,
             data.ErrorCodes.USER_NOT_FOUND,
         );
     }
@@ -56,9 +64,7 @@ async function getUser(filter, filterValue) {
 
 async function editUser(filter, filterValue, updatedData) { 
     
-    checkFilter(filter);
-
-    if (filterValue == null) services.throwError(`User ${filter} is invalid`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
+    checkFilter(filter, filterValue);
 
     const previousUserData = await getUser(filter, filterValue); 
     const [result] = await databaseServices.query(
@@ -90,27 +96,30 @@ async function editUser(filter, filterValue, updatedData) {
 }
 
 async function deleteUser(filter, filterValue) {
-    checkFilter(filter);
+    checkFilter(filter, filterValue);
 
     const [result] = await databaseServices.query(
         `DELETE FROM users WHERE ${filter} = ?`,
         [filterValue]
     );
 
+
+    if (result.affectedRows === 0) { 
+        services.throwError(
+            `No user found with ${filter} ${filterValue} to delete`,
+            data.ErrorCodes.USER_NOT_FOUND,
+        );
+    }
+
     console.log(`User with the ${filter} ${filterValue} deleted successfully`);
 }
 
 
 async function patchUserData(filter, filterValue, column, value) {
-    checkFilter(filter);
-
-    let user = await getUser(filter, filterValue);
-    
+    checkFilter(filter, filterValue);
+        
     if (!editableColumns.includes(column))
         services.throwError(`You can't edit ${column}.`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
-
-    if (user?.[column] === undefined) 
-        services.throwError(`Property ${column} not found in user data`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
 
     const [result] = await databaseServices.query(`
         UPDATE users SET ${column} = ? WHERE ${filter} = ?`,
