@@ -1,30 +1,19 @@
 const databaseServices = require('../Database/DatabaseServices.js');
-const authServices = require('../Services/AuthServices.js');
-const services = require('./Services.js');
-const data = require('../Data/Classes_Data.js');
 
 
-const allowedFilters = ["email", "id"];
-const editableColumns = ["first_name", "last_name", "university", "email"];
 
-function checkFilter(filter, filterValue) {
-    if (!allowedFilters.includes(filter)) services.throwError(`This filter doesn't exist`, data.ErrorCodes.FILTER_ISNT_FOUND);
-    if (filterValue == null) services.throwError(`User ${filter} is invalid`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
+async function findUser(filter, filterValue) {
 
-    switch (filter) {
-        case "email":
-            authServices.validateEmail(filterValue);
-            break;
+    const [result] = await databaseServices.query(`
+        SELECT * FROM users WHERE ${filter} = ?`, 
+        [filterValue]
+    );
 
-        case "id":
-            if (typeof filterValue !== "number") services.throwError(`ID must be a number.`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
-    }
+    return result[0];
 }
 
-async function createUser(userData) {
-    
-    userData = await authServices.userDataValidator(userData);
-   
+
+async function createUser(userData) {   
     const [result] = await databaseServices.query(
     `INSERT INTO users
      (first_name, last_name, university, email, password_hash)
@@ -37,36 +26,13 @@ async function createUser(userData) {
         userData.password_hash
     ]
   );
-  console.log(`User created with ID: ${result.insertId}`);
+  
   return result.insertId;
 }
 
 
-async function getUser(filter, filterValue) {
-
-    checkFilter(filter, filterValue);
-
-    const [result] = await databaseServices.query(`
-        SELECT * FROM users WHERE ${filter} = ?`, 
-        [filterValue]
-    );
-
-    const filteredUser = result[0];
-
-    if (filteredUser == null) { 
-        services.throwError(
-            `No user found with ${filter} ${filterValue}`,
-            data.ErrorCodes.USER_NOT_FOUND,
-        );
-    }
-    return filteredUser;
-}
-
-async function editUser(filter, filterValue, updatedData) { 
+async function editUser(filter, filterValue, updatedData, previousUserData) { 
     
-    checkFilter(filter, filterValue);
-
-    const previousUserData = await getUser(filter, filterValue); 
     const [result] = await databaseServices.query(
         `UPDATE users SET first_name = ?, last_name = ?, university = ?, email = ? WHERE ${filter} = ?`,
         [
@@ -78,61 +44,34 @@ async function editUser(filter, filterValue, updatedData) {
         ]
     );
 
-    for (const key in updatedData) {
-        if (updatedData[key] == null || updatedData[key] === '') { 
-            console.log(`The ${key} is missing in the updated data`); // TODO: use the middleware for this if needed.
-        }
-    }
-
-    if (result.affectedRows === 0) { 
-        services.throwError(
-            `No user found with ${filter} ${filterValue} to update`,
-            data.ErrorCodes.USER_NOT_FOUND,
-        );
-    }
-
-    console.log(`User with ${filter} ${filterValue} updated successfully`);
     return result.affectedRows;
 }
 
 async function deleteUser(filter, filterValue) {
-    checkFilter(filter, filterValue);
-
     const [result] = await databaseServices.query(
         `DELETE FROM users WHERE ${filter} = ?`,
         [filterValue]
     );
 
-
-    if (result.affectedRows === 0) { 
-        services.throwError(
-            `No user found with ${filter} ${filterValue} to delete`,
-            data.ErrorCodes.USER_NOT_FOUND,
-        );
-    }
-
-    console.log(`User with the ${filter} ${filterValue} deleted successfully`);
+    return result.affectedRows;
 }
 
 
 async function patchUserData(filter, filterValue, column, value) {
-    checkFilter(filter, filterValue);
-        
-    if (!editableColumns.includes(column))
-        services.throwError(`You can't edit ${column}.`, data.ErrorCodes.CLIENT_DATA_ARE_INVALID);
 
     const [result] = await databaseServices.query(`
         UPDATE users SET ${column} = ? WHERE ${filter} = ?`,
         [value, filterValue]
     );
 
-    console.log(`The user's data has been successfully updated.`);
+    return result.affectedRows;
 }
+
 
 module.exports = {
     createUser,
-    getUser,
     editUser,
     deleteUser,
     patchUserData,
+    findUser
 };
