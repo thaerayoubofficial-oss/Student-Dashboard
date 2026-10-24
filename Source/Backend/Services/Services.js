@@ -18,7 +18,7 @@ function getSection(sectionKey) {
   return section;
 }
 
-
+//TODO: Refactor this, this function is doing too much ong >_>
 function filterSubSection(request) {
   const sectionKey = request.params.Section;
   const section = getSection(sectionKey);

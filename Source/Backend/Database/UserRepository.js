@@ -1,7 +1,6 @@
 const databaseServices = require('../Database/DatabaseServices.js');
 
 
-
 async function findUser(filter, filterValue) {
 
     const [result] = await databaseServices.query(`
