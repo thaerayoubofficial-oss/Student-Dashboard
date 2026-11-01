@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS assignments (
         ON DELETE CASCADE
 );
 
+
 -- @block
 CREATE TABLE IF NOT EXISTS projects (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -68,3 +69,5 @@ CREATE TABLE IF NOT EXISTS projects (
     FOREIGN KEY (class_id) REFERENCES classes(id)
         ON DELETE CASCADE
 );
+
+
