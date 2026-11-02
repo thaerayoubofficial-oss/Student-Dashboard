@@ -1,7 +1,7 @@
 const databaseServices = require('./DatabaseServices.js');
 const sectionTypes = require('../Data/SectionTypes.js').SectionType;
 
-async function createSection(sectionType, sectionProperties) {
+async function createSubSection(sectionType, sectionProperties) {
     let fields = '';
 
     switch (sectionType) {
@@ -44,26 +44,31 @@ async function createSection(sectionType, sectionProperties) {
 }
 
 async function getSection(sectionType) {
-    const [result] = await databaseServices.query(`
+    const [row, field] = await databaseServices.query(`
         SELECT * FROM ${sectionType}
     `);
-    return result;
+    return {row, field};
 }
 
-async function getSubSectionById(sectionType, id, user_id, class_id) {
-    const where = subSectionSQLWHERE(sectionType, id, user_id, class_id);
+async function getSubSectionById(sectionType, id) {
 
     const [result] = await databaseServices.query(
         `
-        SELECT * FROM ${sectionType} WHERE ${where.SQLNotation}
+        SELECT * FROM ${sectionType} WHERE id = ?
         `,
-        where.Values
+        [id]
     );
 
     return result;
 }
 
 async function getSubSectionByProperities(sectionType, properties) {
+    const fieldMap = Object.entries(properties);
+    for(const [key, value] of fieldMap) {
+        if (value == null || value === '') { 
+            delete properties[key];''
+        }
+    }
     const fields = Object.keys(properties);
     const where = fields.map(field => `\`${field}\` = ?`).join(' AND ');
     const values = fields.map(field => properties[field]);
@@ -142,7 +147,7 @@ function subSectionSQLWHERE(sectionType, id, user_id, class_id) {
 }
 
 exports.module = {
-    createSection,
+    createSubSection,
     getSection,
     getSubSectionById,
     patchSubSection,
