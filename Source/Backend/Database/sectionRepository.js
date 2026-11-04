@@ -43,10 +43,11 @@ async function createSubSection(sectionType, sectionProperties) {
     return result.insertId;
 }
 
-async function getSection(sectionType) {
+async function getSection(sectionType, user_id) {
     const [row, field] = await databaseServices.query(`
-        SELECT * FROM ${sectionType}
-    `);
+        SELECT * FROM ${sectionType} WHERE user_id = ?`,
+        [user_id]
+    );
     return {row, field};
 }
 

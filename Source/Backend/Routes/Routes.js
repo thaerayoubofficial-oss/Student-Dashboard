@@ -12,11 +12,11 @@ router.use((req, res, next) => {
 router.post('/signup', authController.signup);
 
 router.get('/', controller.GET);
-router.get('/:Section', controller.GETSection);
-router.post('/:Section', controller.POSTSection);
-router.put('/:Section', controller.PUTSection);
-router.delete('/:Section', controller.DELETESection);
-router.patch('/:Section', controller.PATCHSection);
+router.get('/:sectionType', controller.GETSection);
+router.post('/:sectionType', controller.POSTSection);
+router.put('/:sectionType', controller.PUTSection);
+router.delete('/:sectionType', controller.DELETESection);
+router.patch('/:sectionType', controller.PATCHSection);
 
 
 module.exports = router;

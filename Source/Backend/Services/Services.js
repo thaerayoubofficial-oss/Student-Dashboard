@@ -8,6 +8,10 @@ function throwError(message, errorInfo) {
 }
 
 
+
+
+// --------------------------------------- DEAD CODE -------------------------------------------
+
 function getSection(sectionKey) {
   const section = data.sections[sectionKey];
 
@@ -17,6 +21,8 @@ function getSection(sectionKey) {
 
   return section;
 }
+
+
 
 //TODO: Refactor this, this function is doing too much ong >_>
 function filterSubSection(request) {
