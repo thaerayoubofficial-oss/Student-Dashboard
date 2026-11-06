@@ -102,6 +102,7 @@ async function getSubSectionFilter(request) {
 }
 
 
+
 module.exports = {
     createSubSection,
     getSection,
@@ -109,5 +110,6 @@ module.exports = {
     patchSubSection,
     editSubSection,
     deleteSubSection,
-    getSubSectionByProperities
+    getSubSectionByProperities,
+    sectionTypeValidator
 }
