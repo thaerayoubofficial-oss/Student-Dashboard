@@ -1,5 +1,5 @@
 const sectionRepository = require('../Database/sectionRepository');
-const sectionTypes = require('../Data/SectionTypes.js').SectionType;
+const sectionTypes = require('../Data/SectionTypes.js').SectionTypes;
 const services = require('../Services/Services.js');
 const ERROR_CODES = require('../Data/Error_Codes.js');
 
@@ -30,24 +30,35 @@ async function getSubSectionByProperities(sectionType, properities) {
 async function createSubSection(sectionType, sectionProperities) {
     await properityValidator(sectionType, sectionProperities);
     const subSectionId = await sectionRepository.createSubSection(sectionType, sectionProperities);
-    const subSection = await sectionRepository.getSubSectionByProperities(sectionType, { id: subSectionId });
-    return subSection[0];
+    const subSection = await sectionRepository.getSubSectionById(sectionType, subSectionId);
+    return subSection.length === 1 ? subSection[0] : subSection; //Seems stupid, but I'd like it to do this.
 }
 
 async function editSubSection(sectionType, id, user_id, class_id, properities) {
     await validateForEditPatch(sectionType, id, user_id, class_id, properities);
-    return await sectionRepository.editSubSection(sectionType, id, user_id, class_id, properities);
+    const result = await sectionRepository.editSubSection(sectionType, id, user_id, class_id, properities)
+    if (result.affectedRows === 0) {
+        services.throwError('No rows were updated. Please check the provided IDs and properties.', SQL_ERROR_CODES.NO_ROWS_UPDATED);
+    }
+    return result;
 }
 
 async function patchSubSection(sectionType, id, user_id, class_id, properity) {
     await validateForEditPatch(sectionType, id, user_id, class_id, properity);
-    return await sectionRepository.patchSubSection(sectionType, id, user_id, class_id, properity);
+    const result = await sectionRepository.patchSubSection(sectionType, id, user_id, class_id, properity);
+    if (result.affectedRows === 0) {
+        services.throwError('No rows were updated. Please check the provided IDs and properties.', SQL_ERROR_CODES.NO_ROWS_UPDATED);
+    }
+    return result;
 }
 
 async function deleteSubSection(sectionType, id, user_id, class_id) {
     sectionTypeValidator(sectionType);
     idsValidator(id, user_id, class_id);
-    await sectionRepository.deleteSubSection(sectionType, id, user_id, class_id);
+    const result = await sectionRepository.deleteSubSection(sectionType, id, user_id, class_id);
+    if (result.affectedRows === 0) {
+        services.throwError('No rows were updated. Please check the provided IDs and properties.', SQL_ERROR_CODES.NO_ROWS_UPDATED);
+    }
 }
 
 async function validateForEditPatch(sectionType, id, user_id, class_id, properities) {
@@ -80,7 +91,7 @@ function sectionTypeValidator(sectionType) {
 async function properityValidator(sectionType, properities) {
     sectionTypeValidator(sectionType);
 
-    const allowedKeys = await sectionRepository.getSectionFields(sectionType);
+    const allowedKeys = await getSectionFields(sectionType);
     const properityKeys = Object.keys(properities);
 
     for (const key of properityKeys) {
@@ -102,6 +113,10 @@ async function getSubSectionFilter(request) {
 }
 
 
+async function getSectionFields(sectionType) {
+    sectionTypeValidator(sectionType);
+    return await sectionRepository.getSectionFields(sectionType);
+}
 
 module.exports = {
     createSubSection,
@@ -111,5 +126,7 @@ module.exports = {
     editSubSection,
     deleteSubSection,
     getSubSectionByProperities,
-    sectionTypeValidator
+    sectionTypeValidator,
+    getSubSectionFilter,
+    getSectionFields
 }

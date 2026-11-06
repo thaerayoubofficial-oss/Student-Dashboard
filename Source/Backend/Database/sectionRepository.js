@@ -1,7 +1,7 @@
 const databaseServices = require('./DatabaseServices.js');
-const sectionTypes = require('../Data/SectionTypes.js').SectionType;
+const sectionTypes = require('../Data/SectionTypes.js').SectionTypes;
 
-async function createSubSection(sectionType, sectionProperties) {
+async function createSubSection(sectionType, subSectionProperities) {
     let fields = '';
 
     switch (sectionType) {
@@ -23,7 +23,7 @@ async function createSubSection(sectionType, sectionProperties) {
 
 
     const valuesToInsert = fieldsToInsert.map(
-        field => sectionProperties[field]
+        field => subSectionProperities[field]
     );
 
     const valuesNotationSQL = fieldsToInsert
@@ -44,11 +44,11 @@ async function createSubSection(sectionType, sectionProperties) {
 }
 
 async function getSection(sectionType, user_id) {
-    const [row, field] = await databaseServices.query(`
-        SELECT * FROM ${sectionType} WHERE user_id = ?`,
+    const [rows] = await databaseServices.query(
+        `SELECT * FROM ${sectionType} WHERE user_id = ?`,
         [user_id]
     );
-    return {row, field};
+    return rows;
 }
 
 async function getSubSectionById(sectionType, id) {
@@ -147,6 +147,20 @@ function subSectionSQLWHERE(sectionType, id, user_id, class_id) {
     return {SQLNotation: WHERE, Values: Values};
 }
 
+
+async function getSectionFields(sectionType) { 
+
+    const [rows] = await databaseServices.query(
+        `SELECT COLUMN_NAME
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?
+        ORDER BY ORDINAL_POSITION`,
+        [sectionType]
+    );
+
+    return rows.map(row => row.COLUMN_NAME);
+}
+
 exports.module = {
     createSubSection,
     getSection,
@@ -154,5 +168,6 @@ exports.module = {
     patchSubSection,
     editSubSection,
     deleteSubSection,
-    getSubSectionByProperities
+    getSubSectionByProperities,
+    getSectionFields
 }

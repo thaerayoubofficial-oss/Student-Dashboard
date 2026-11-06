@@ -1,6 +1,7 @@
 const express = require('express');
 const controller = require('../Controllers/Controller.js');
 const authController = require('../Controllers/AuthController.js');
+const authenticate = require('../Middleware/Authentication.js');
 const router = express.Router();
 
 router.use((req, res, next) => {
@@ -8,6 +9,7 @@ router.use((req, res, next) => {
     next();
 });
 
+router.use(authenticate);
 
 router.post('/signup', authController.signup);
 
