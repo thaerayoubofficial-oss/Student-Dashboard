@@ -58,7 +58,7 @@ async function deleteSubSection(sectionType, id, user_id, class_id) {
     const result = await sectionRepository.deleteSubSection(sectionType, id, user_id, class_id);
     if (result.affectedRows === 0) {
         services.throwError('No rows were updated. Please check the provided IDs and properties.', SQL_ERROR_CODES.NO_ROWS_UPDATED);
-    }
+    }  
 }
 
 async function validateForEditPatch(sectionType, id, user_id, class_id, properities) {
